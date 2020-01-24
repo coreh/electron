@@ -123,6 +123,64 @@ describe('clipboard module', () => {
     })
   })
 
+  describe('clipboard.getNativeFormat(portableFormat)', () => {
+    it('returns a native format for each supported portable format', () => {
+      expect(clipboard.getNativeFormat('text')).to.be.a('string')
+      expect(clipboard.getNativeFormat('bookmark')).to.be.a('string')
+      expect(clipboard.getNativeFormat('rtf')).to.be.a('string')
+      expect(clipboard.getNativeFormat('html')).to.be.a('string')
+      expect(clipboard.getNativeFormat('image')).to.be.a('string')
+    })
+
+    it('throws for unsupported portable formats', () => {
+      expect(() => {
+        clipboard.getNativeFormat('video')
+      }).to.throw()
+    })
+  })
+
+  describe('clipboard.writeBuffers(entries)', () => {
+    it('writes several Buffers with the specified formats', () => {
+      clipboard.writeBuffers({
+        'example.fake-format-1': Buffer.from('hello'),
+        'example.fake-format-2': Buffer.from('world')
+      })
+
+      expect(clipboard.readBuffer('example.fake-format-1').toString()).to.equal('hello')
+      expect(clipboard.readBuffer('example.fake-format-2').toString()).to.equal('world')
+    })
+
+    it('throws an error when a non-object is passed in', () => {
+      expect(() => {
+        clipboard.writeBuffers('hello')
+      }).to.throw()
+    })
+
+    it('throws an error when a non-Buffer is specified', () => {
+      expect(() => {
+        clipboard.writeBuffers({
+          'example.fake-format-1': 'hello',
+          'example.fake-format-2': Buffer.from('world')
+        })
+      }).to.throw()
+    })
+
+    it('allows writing a mix of both native and custom formats', () => {
+      const text = clipboard.getNativeFormat('text')
+      const html = clipboard.getNativeFormat('html')
+
+      clipboard.writeBuffers({
+        [text]: Buffer.from('hello'),
+        [html]: Buffer.from('<span style="color: red">hello</span>'),
+        'example.fake-format': Buffer.from('hello')
+      })
+
+      expect(clipboard.readText()).to.equal('hello')
+      expect(clipboard.readHTML()).to.equal('<span style="color: red">hello</span>')
+      expect(clipboard.readBuffer('example.fake-format').toString()).to.equal('hello')
+    })
+  })
+
   describe('clipboard.readBuffer(format)', () => {
     before(function () {
       if (process.platform !== 'darwin') {
