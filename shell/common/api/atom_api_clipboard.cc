@@ -78,6 +78,28 @@ void Clipboard::WriteBuffer(const std::string& format,
       mojo_base::BigBuffer(payload_span));
 }
 
+std::string Clipboard::GetNativeFormat(const std::string& portable_format,
+                                       gin_helper::Arguments* args) {
+  ui::ScopedClipboardWriter writer(GetClipboardBuffer(args));
+  base::string16 text, html, bookmark;
+  gfx::Image image;
+
+  if (portable_format == "text") {
+    return ui::ClipboardFormatType::GetPlainTextType().Serialize();
+  } else if (portable_format == "bookmark") {
+    return ui::ClipboardFormatType::GetUrlType().Serialize();
+  } else if (portable_format == "rtf") {
+    return ui::ClipboardFormatType::GetRtfType().Serialize();
+  } else if (portable_format == "html") {
+    return ui::ClipboardFormatType::GetHtmlType().Serialize();
+  } else if (portable_format == "image") {
+    return ui::ClipboardFormatType::GetBitmapType().Serialize();
+  } else {
+    args->ThrowError("portableFormat must be one of the supported formats");
+    return "";
+  }
+}
+
 void Clipboard::WriteBuffers(
     const std::vector<std::tuple<std::string, v8::Local<v8::Value>>> buffers,
     gin_helper::Arguments* args) {
@@ -257,6 +279,7 @@ void Initialize(v8::Local<v8::Object> exports,
   dict.SetMethod("readFindText", &electron::api::Clipboard::ReadFindText);
   dict.SetMethod("writeFindText", &electron::api::Clipboard::WriteFindText);
   dict.SetMethod("readBuffer", &electron::api::Clipboard::ReadBuffer);
+  dict.SetMethod("getNativeFormat", &electron::api::Clipboard::GetNativeFormat);
   dict.SetMethod("writeBuffer", &electron::api::Clipboard::WriteBuffer);
   dict.SetMethod("_writeBuffers", &electron::api::Clipboard::WriteBuffers);
   dict.SetMethod("clear", &electron::api::Clipboard::Clear);

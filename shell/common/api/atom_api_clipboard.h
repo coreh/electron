@@ -62,6 +62,9 @@ class Clipboard {
                           const v8::Local<v8::Value> buffer,
                           gin_helper::Arguments* args);
 
+  static std::string GetNativeFormat(const std::string& portable_format_string,
+                                     gin_helper::Arguments* args);
+
   static void WriteBuffers(
       const std::vector<std::tuple<std::string, v8::Local<v8::Value>>> buffers,
       gin_helper::Arguments* args);
